@@ -5,6 +5,7 @@
 <script>
 import * as THREE from "three";
 import { OrbitControls } from "three-OrbitControlsYYK/OrbitControls.js";
+import axios from "axios";
 export default {
   name: "ViewerCanvas",
   data: function () {
@@ -88,6 +89,7 @@ export default {
     this.scene.add(this.floor);
     this.control = new OrbitControls(this.camera, this.renderer.domElement);
     this.control.enableDamping = true;
+    this.getRhinoModel(5);
   },
   mounted() {
     // this.section = this.$el.querySelector("section.widget");]
@@ -106,6 +108,10 @@ export default {
 
       // call back, call animate itself again the next frame
       requestAnimationFrame(this.animate);
+    },
+    async getRhinoModel(radius) {
+      let res = await axios.get(`/api/makeSphere/${radius}`);
+      console.log(res);
     },
   },
 };

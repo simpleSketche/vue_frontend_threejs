@@ -89,7 +89,7 @@ export default {
     this.scene.add(this.floor);
     this.control = new OrbitControls(this.camera, this.renderer.domElement);
     this.control.enableDamping = true;
-    this.getRhinoModel(5);
+    this.getRhinoModel(15);
   },
   mounted() {
     // this.section = this.$el.querySelector("section.widget");]
@@ -110,8 +110,8 @@ export default {
       requestAnimationFrame(this.animate);
     },
     async getRhinoModel(radius) {
-      let res = await axios.get(`/api/makeSphere/${radius}`);
-      console.log(res);
+      console.log(radius);
+      await axios.get("/makeSphere/5").then((r) => console.log(r));
     },
   },
 };

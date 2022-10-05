@@ -6,6 +6,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three-OrbitControlsYYK/OrbitControls.js";
 import axios from "axios";
+import rhino3dm from "rhino3dm";
+
 export default {
   name: "ViewerCanvas",
   data: function () {
@@ -62,6 +64,10 @@ export default {
      */
     const renderer = new THREE.WebGLRenderer();
 
+    /**
+     * load rhino
+     */
+
     return {
       scene: scene,
       camera: camera,
@@ -75,6 +81,7 @@ export default {
       control: {},
       oldElapsedTime: 0,
       clock: new THREE.Clock(),
+      rhino: null,
     };
   },
   created() {
@@ -89,7 +96,13 @@ export default {
     this.scene.add(this.floor);
     this.control = new OrbitControls(this.camera, this.renderer.domElement);
     this.control.enableDamping = true;
-    this.getRhinoModel(15);
+
+    var dummy = this;
+    rhino3dm().then(async (m) => {
+      dummy.rhino = m;
+    });
+
+    this.getRhinoModel(1);
   },
   mounted() {
     // this.section = this.$el.querySelector("section.widget");]
@@ -110,8 +123,14 @@ export default {
       requestAnimationFrame(this.animate);
     },
     async getRhinoModel(radius) {
-      console.log(radius);
-      await axios.get("/makeSphere/5").then((r) => console.log(r));
+      console.log("heloooooooooooooooooooo!!!!!!!!!!!!!");
+      var loader = new THREE.BufferGeometryLoader();
+      let res = await axios.get(`/makeSphere/${radius}`);
+      // console.log(rhino3dm);
+      // console.log(res);
+      // console.log(rhino3dm.CommonObject.decode());
+      var geometry = loader.parse(res.toThreejsJSON());
+      console.log(geometry);
     },
   },
 };

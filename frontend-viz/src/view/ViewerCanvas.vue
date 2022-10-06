@@ -1,5 +1,19 @@
 <template>
-  <div class="pageHeight"><div class="canvas"></div></div>
+  <div class="pageHeight">
+    <v-slider
+      dark
+      color="red"
+      trackColor="white"
+      max="10.00"
+      min="1.00"
+      class="slider ma-15"
+      label="Radius"
+      thumb-label="always"
+      v-model="inputValue"
+      @change="mouseupEvent(inputValue)"
+    ></v-slider>
+    <div class="canvas"></div>
+  </div>
 </template>
 
 <script>
@@ -84,6 +98,9 @@ export default {
       rhinoService: new RhinoService(),
       rhinoMesh: {},
       rhinoThreeMesh: {},
+      inputValue: 1,
+      isInProcess: false,
+      existingMesh: null,
     };
   },
   async created() {
@@ -98,11 +115,11 @@ export default {
     this.scene.add(this.floor);
     this.control = new OrbitControls(this.camera, this.renderer.domElement);
     this.control.enableDamping = true;
-    await this.getRhinoModel(100);
-    this.scene.add(this.rhinoThreeMesh);
+    await this.getRhinoModel(this.inputValue);
   },
-  mounted() {
+  async mounted() {
     // this.section = this.$el.querySelector("section.widget");]
+
     this.canvas = this.$el.querySelector("div.canvas");
     this.parent = this.$el.querySelector("div.pageHeight");
     this.canvas.appendChild(this.renderer.domElement);
@@ -120,6 +137,7 @@ export default {
       requestAnimationFrame(this.animate);
     },
     async getRhinoModel(radius) {
+      this.isInProcess = true;
       // var loader = new THREE.BufferGeometryLoader();
       let res = await axios.get(`/makeSphere/${radius}`);
       this.rhinoMesh = await this.rhinoService.decodeRhinoJsonToThreeJson(res);
@@ -133,7 +151,23 @@ export default {
       });
       this.rhinoThreeMesh = new THREE.Mesh(geometry, material);
 
-      console.log(this.rhinoThreeMesh);
+      if (this.existingMesh != null) {
+        console.log(this.existingMesh);
+        let lastMeshIndex = this.scene.children.length - 1;
+        this.existingMesh = this.scene.children[lastMeshIndex];
+        this.scene.remove(this.existingMesh);
+      } else {
+        this.existingMesh = this.rhinoThreeMesh;
+      }
+
+      this.scene.add(this.rhinoThreeMesh);
+      this.isInProcess = false;
+      console.log(this.scene);
+      console.log(this.scene.children.length);
+    },
+    async mouseupEvent(value) {
+      console.log(value);
+      await this.getRhinoModel(value);
     },
   },
 };
@@ -147,5 +181,10 @@ export default {
   background-color: black;
   color: white;
   height: 100%;
+}
+.slider {
+  position: fixed;
+  z-index: 2;
+  width: 15%;
 }
 </style>

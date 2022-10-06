@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three-OrbitControlsYYK/OrbitControls.js";
 import axios from "axios";
-import rhino3dm from "rhino3dm";
+import RhinoService from "../rhinoService.js";
 
 export default {
   name: "ViewerCanvas",
@@ -81,10 +81,12 @@ export default {
       control: {},
       oldElapsedTime: 0,
       clock: new THREE.Clock(),
-      rhino: null,
+      rhinoService: new RhinoService(),
+      rhinoMesh: {},
+      rhinoThreeMesh: {},
     };
   },
-  created() {
+  async created() {
     this.renderer.setSize(window.innerWidth * 0.92, window.innerHeight * 0.92);
     this.directionalLight.position.set(0, 0, 10);
     this.camera.position.y = 5;
@@ -96,13 +98,8 @@ export default {
     this.scene.add(this.floor);
     this.control = new OrbitControls(this.camera, this.renderer.domElement);
     this.control.enableDamping = true;
-
-    var dummy = this;
-    rhino3dm().then(async (m) => {
-      dummy.rhino = m;
-    });
-
-    this.getRhinoModel(1);
+    await this.getRhinoModel(100);
+    this.scene.add(this.rhinoThreeMesh);
   },
   mounted() {
     // this.section = this.$el.querySelector("section.widget");]
@@ -123,14 +120,20 @@ export default {
       requestAnimationFrame(this.animate);
     },
     async getRhinoModel(radius) {
-      console.log("heloooooooooooooooooooo!!!!!!!!!!!!!");
-      var loader = new THREE.BufferGeometryLoader();
+      // var loader = new THREE.BufferGeometryLoader();
       let res = await axios.get(`/makeSphere/${radius}`);
-      // console.log(rhino3dm);
-      // console.log(res);
-      // console.log(rhino3dm.CommonObject.decode());
-      var geometry = loader.parse(res.toThreejsJSON());
-      console.log(geometry);
+      this.rhinoMesh = await this.rhinoService.decodeRhinoJsonToThreeJson(res);
+
+      let loader = new THREE.BufferGeometryLoader();
+      var geometry = loader.parse(this.rhinoMesh);
+
+      var material = new THREE.MeshStandardMaterial({
+        metalness: 0.3,
+        roughness: 0.4,
+      });
+      this.rhinoThreeMesh = new THREE.Mesh(geometry, material);
+
+      console.log(this.rhinoThreeMesh);
     },
   },
 };

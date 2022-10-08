@@ -111,8 +111,8 @@ export default {
     this.scene.add(this.camera);
     this.scene.add(this.ambientLight);
     this.scene.add(this.directionalLight);
-    this.scene.add(this.sphere);
-    this.scene.add(this.floor);
+    // this.scene.add(this.sphere);
+    // this.scene.add(this.floor);
     this.control = new OrbitControls(this.camera, this.renderer.domElement);
     this.control.enableDamping = true;
     await this.getRhinoModel(this.inputValue);
@@ -138,32 +138,41 @@ export default {
     },
     async getRhinoModel(radius) {
       this.isInProcess = true;
-      // var loader = new THREE.BufferGeometryLoader();
-      let res = await axios.get(`/makeSphere/${radius}`);
-      this.rhinoMesh = await this.rhinoService.decodeRhinoJsonToThreeJson(res);
+      // let res = await axios.get(`/makeSphere/${radius}`);
+      // this.rhinoMesh = await this.rhinoService.decodeRhinoJsonToThreeJson(res);
+
+      let generatorRes = await axios.get(`/getGeneratedResult`);
+
+      let generatorResult = await this.rhinoService.decodeGeneratorResult(
+        generatorRes
+      );
 
       let loader = new THREE.BufferGeometryLoader();
-      var geometry = loader.parse(this.rhinoMesh);
+      // var geometry = loader.parse(this.rhinoMesh);
 
       var material = new THREE.MeshStandardMaterial({
         metalness: 0.3,
         roughness: 0.4,
       });
-      this.rhinoThreeMesh = new THREE.Mesh(geometry, material);
 
-      if (this.existingMesh != null) {
-        console.log(this.existingMesh);
-        let lastMeshIndex = this.scene.children.length - 1;
-        this.existingMesh = this.scene.children[lastMeshIndex];
-        this.scene.remove(this.existingMesh);
-      } else {
-        this.existingMesh = this.rhinoThreeMesh;
-      }
+      generatorResult.forEach((r) => {
+        let curTHREEobj = new THREE.Mesh(loader.parse(r), material);
+        this.scene.add(curTHREEobj);
+      });
 
-      this.scene.add(this.rhinoThreeMesh);
+      // this.rhinoThreeMesh = new THREE.Mesh(geometry, material);
+      console.log(radius);
+      // if (this.existingMesh != null) {
+      //   console.log(this.existingMesh);
+      //   let lastMeshIndex = this.scene.children.length - 1;
+      //   this.existingMesh = this.scene.children[lastMeshIndex];
+      //   this.scene.remove(this.existingMesh);
+      // } else {
+      //   this.existingMesh = this.rhinoThreeMesh;
+      // }
+
+      // this.scene.add(this.rhinoThreeMesh);
       this.isInProcess = false;
-      console.log(this.scene);
-      console.log(this.scene.children.length);
     },
     async mouseupEvent(value) {
       console.log(value);
